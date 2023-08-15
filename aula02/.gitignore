@@ -1,3 +1,6 @@
 #Enviroments
 .aula02
 aula02/
+
+#Cache
+__pycache__/
