@@ -1,0 +1,16 @@
+.ipynb_checkpoints
+*.pkl
+
+# Environments
+.env
+.venv
+.mlops
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+mlops/
+
+#Cache
+__pycache__/
