@@ -1,26 +1,32 @@
 ## IMPORTS
 # Data
 import pandas as pd
-import missingno as msno
 import os
 
 
 current_directory = os.path.dirname(__file__)
 ## PATH
-d_path = os.path.join(current_directory, "../data/bank.csv")
-pp_path = os.path.join(current_directory, "../data/bank_pro.csv")
+d_path = os.path.join(current_directory, "../data/train-2023-08-01.csv")
+pp_path = os.path.join(current_directory, "../data/train-2023-08-01-pro.pqt")
 
 ## LOAD DATA
 df = pd.read_csv(d_path)
 
 ## PROCESS
-# Mapping
-dep_mapping = {"yes": 1, "no": 0}
-df["deposit"] = df["deposit"].astype("category").map(dep_mapping) # Convert the column to category and map the values
+# Separe Date feature
+df["date"] = pd.to_datetime(df["date"])
 
-# Dropping
-df = df.drop(labels = ["default", "contact", "day", "month", "pdays", "previous", "loan", "poutcome", "poutcome"], axis=1) # Drop unwanted columns
+df["year"] = df["date"].dt.year
+df["month"] = df["date"].dt.month
+df["day"] = df["date"].dt.day
+df["weekday"] = df["date"].dt.weekday
+
+# Sum of all sales per store_id in a day
+df["total_sales"] = df.groupby(["store_id", "date"])["price"].transform("sum")
+
+# Drop date, client_id, product_id and price feature
+df.drop(["date", "client_id", "product_id", "price"], axis=1, inplace=True)
 
 ## SAVE
-# Saving Process Results
-pd.DataFrame.to_csv(df, pp_path, index=False)
+# Saving Process Results to parquet
+df.to_parquet(pp_path, index=False)

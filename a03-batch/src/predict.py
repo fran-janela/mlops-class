@@ -1,45 +1,30 @@
-import os
+import os, sys
 import pandas as pd
 
 # Export
 import pickle
 
 # Modeling
-from lightgbm import LGBMClassifier
-from sklearn.model_selection import train_test_split
-from sklearn.compose import make_column_transformer
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.ensemble import RandomForestRegressor
 
 # Import Models
 current_directory = os.path.dirname(__file__)
+model_name = sys.argv[1]
 
-file_path = os.path.join(current_directory, "../models/model.pkl")
+file_path = os.path.join(current_directory, "../models/", model_name)
 with open(file_path, 'rb') as file:
     model = pickle.load(file)
 
-file_path = os.path.join(current_directory, "../models/ohe.pkl")
-with open(file_path, 'rb') as file:
-    one_hot_enc = pickle.load(file)
 
-# Import predict data
-df = pd.read_csv(os.path.join(current_directory, "../data/bank_predict.csv"))
-
-# Drop Unwanted Columns
-prep_df = df.drop(labels = ["default", "contact", "day", "month", "pdays", "previous", "loan", "poutcome", "poutcome"], axis=1)
-
-## Define category columns
-cat_cols = ["job", "marital", "education", "housing"]
-
-# Encoding
-prep_df = pd.DataFrame(one_hot_enc.transform(prep_df), columns=one_hot_enc.get_feature_names_out())
+## Import PreProcessed Data
+file_name = sys.argv[2]
+data_path = "../data/"
+path = os.path.join(current_directory, data_path, file_name)
+df = pd.read_parquet(path)
 
 # Predict
-y_pred = model.predict(prep_df)
-df["y_pred"] = y_pred
-
-# Mapping
-dep_mapping = {1: "yes", 0: "no"}
-df["y_pred"] = df["y_pred"].astype("category").map(dep_mapping) # Convert the column to category and map the values
+y_pred = model.predict(df)
+df["total_sales_predict"] = y_pred
 
 # Export
-pd.DataFrame.to_csv(df, os.path.join(current_directory, "../data/bank_predict.csv"), index=False)
+df.to_parquet(os.path.join(current_directory, "../data/predict-done-2023-08-03.parquet"), index=False)
